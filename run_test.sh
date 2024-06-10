@@ -1,21 +1,29 @@
 #!/bin/sh
 cargo run
-gzip -9 <output.ascii > output.ascii.gz
-gzip -9 <output.packed > output.packed.gz
-gzip -9 <output.ascii.txt > output.ascii.txt.gz
 
-print_length() {
-   	 stat -c '%n: %s bytes' "$1" "$1.gz"
+measure_file() {
+    env LANC='C' wc -c
 }
+test_gzip() {
+    rawSize=$(measure_file <$1)
+    compressedSize4=$(gzip -4 <$1 | measure_file)
+    compressedSize9=$(gzip -9 <$1 | measure_file)
+    echo "$1"
+    echo "raw:     $rawSize bytes"
+    echo "gzip -4: $compressedSize4 bytes"
+    echo "gzip -9: $compressedSize9 bytes"
+    echo ''
+}
+
 echo '7-bit predictable looking numbers'
 echo 'encoded as an ASCII string:'
-print_length output.ascii
-echo ''
+test_gzip output.ascii
 
 echo 'packed into bytes'
-print_length output.packed
-echo ''
+test_gzip output.packed
 
 echo 'encoded as an ASCII string, 1 byte per line:'
-print_length output.ascii.txt
-echo ''
+test_gzip output.ascii_8
+
+echo 'encoded as an ASCII string, 72 bytes per line:'
+test_gzip output.ascii_576
